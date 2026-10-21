@@ -1,0 +1,11 @@
+[project]
+name = "prueba-tecnica-backend-officer"
+version = "1.0.0"
+description = "Prueba técnica para el puesto de Backend Officer"
+requires-python = ">=3.13"
+dependencies = [
+    "notebook>=7.4.7",
+    "numpy>=2.3.5",
+    "pandas>=2.3.3",
+    "tqdm>=4.67.1",
+]
