@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, FiniteFloat
+from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
 
 Identifier = Annotated[int, Field(gt=0, le=2**63 - 1)]
 Correlativo = Annotated[int, Field(ge=-(2**63), le=2**63 - 1)]
@@ -59,3 +59,32 @@ class PolizaRead(BaseModel):
 
 class PolizaDetail(PolizaRead):
     items: list[ItemRead]
+
+
+class PolizaFilters(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    page: int = Field(default=1, ge=1, le=2**63 - 1)
+    page_size: int = Field(default=20, ge=1, le=100)
+    correlativo: Correlativo | None = None
+    fecha_desde: date | None = None
+    fecha_hasta: date | None = None
+    aduana_id: Identifier | None = None
+    tipo_regimen_id: Identifier | None = None
+    pais_id: Identifier | None = None
+    sac_id: Identifier | None = None
+
+    @model_validator(mode="after")
+    def validate_ranges(self):
+        if self.fecha_desde and self.fecha_hasta and self.fecha_desde > self.fecha_hasta:
+            raise ValueError("fecha_desde debe ser anterior o igual a fecha_hasta")
+        if (self.page - 1) * self.page_size > 2**63 - 1:
+            raise ValueError("El desplazamiento de página excede el rango admitido")
+        return self
+
+
+class PolizaPage(BaseModel):
+    items: list[PolizaRead]
+    total: int
+    page: int
+    page_size: int
