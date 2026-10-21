@@ -35,7 +35,7 @@ uv run --locked pytest
 uv run --locked ruff check app tests
 ```
 
-Alcance pendiente: KPI valor-por-mes, caché, Docker, logs estructurados y despliegue.
+Alcance pendiente: caché, Docker, logs estructurados y despliegue.
 Consultar docs/superpowers/specs/2026-10-21-phase-1.md para hallazgos del setup.
 
 
@@ -59,3 +59,22 @@ no solo por nombre o descripción. Excluye referencias de dimensión nulas;
 los nombres/descripciones nulos de dimensiones existentes se conservan.
 Solo aparecen dimensiones con ítems vinculados a pólizas. Por tanto, un
 ranking puede contener menos de cinco filas y no tiene por qué sumar el total.
+
+`GET /dashboard/kpis/valor-por-mes?year=2025` exige un año entero entre 1 y
+9999; valores inválidos o ausentes devuelven 422. Usa `fecha_declaracion`
+para filtrar el año y agrupar por mes. Devuelve `year` y `meses`, con doce
+objetos `{ "mes": 1, "valor_importado": 0.0 }` ordenados de enero a diciembre.
+Las fechas nulas quedan fuera de la serie mensual, aunque sus importes sí
+participan en totales y rankings globales. Python solo completa los meses
+faltantes a partir de un máximo de doce filas ya agregadas en SQL.
+
+```sh
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/dashboard/kpis/totals
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/dashboard/kpis/top-5
+curl -H "Authorization: Bearer $TOKEN" 'http://127.0.0.1:8000/dashboard/kpis/valor-por-mes?year=2025'
+```
+
+Las pruebas de KPIs cubren autenticación, múltiples ítems por póliza,
+SUM sin DISTINCT, nulos, datos vacíos, empates, límites del año y agrupación
+SQL. Las pruebas unitarias de la serie mensual verifican orden y relleno de
+meses; las de integración ejecutan los endpoints contra SQLite temporal.

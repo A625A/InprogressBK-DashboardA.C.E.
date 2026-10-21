@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.security import current_user
 from app.db.session import get_session
-from app.schemas.dashboard import TopFive, Totals
+from app.schemas.dashboard import MonthlyValues, TopFive, Totals
 from app.services import dashboard
 
 router = APIRouter(
@@ -22,3 +22,8 @@ def totals(session: DB):
 @router.get("/top-5", response_model=TopFive)
 def top_five(session: DB):
     return dashboard.top_five(session)
+
+
+@router.get("/valor-por-mes", response_model=MonthlyValues)
+def monthly_values(year: Annotated[int, Query(ge=1, le=9999)], session: DB):
+    return dashboard.monthly_values(session, year)

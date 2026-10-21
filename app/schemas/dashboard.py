@@ -22,3 +22,13 @@ class ProductValue(BaseModel):
 class TopFive(BaseModel):
     paises: list[CountryValue]
     productos: list[ProductValue]
+
+
+class MonthValue(BaseModel):
+    mes: int
+    valor_importado: float
+
+
+class MonthlyValues(BaseModel):
+    year: int
+    meses: list[MonthValue]

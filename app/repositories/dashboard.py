@@ -1,4 +1,6 @@
-from sqlalchemy import func, select
+from datetime import date
+
+from sqlalchemy import extract, func, select
 from sqlalchemy.orm import Session
 
 from app.models.dimensions import Pais, Sac
@@ -41,3 +43,21 @@ def top_products(session: Session):
         .limit(5)
     )
     return session.execute(statement).mappings().all()
+
+
+def monthly_values(session: Session, year: int) -> dict[int, float]:
+    month = extract("month", Poliza.fecha_declaracion).label("mes")
+    value = func.coalesce(func.sum(PolizaItem.valor_cif_uds), 0.0).label("valor_importado")
+    statement = (
+        select(month, value)
+        .select_from(Poliza)
+        .join(PolizaItem, PolizaItem.poliza_id == Poliza.id)
+        .where(
+            Poliza.fecha_declaracion >= date(year, 1, 1),
+            Poliza.fecha_declaracion <= date(year, 12, 31),
+        )
+        .group_by(month)
+        .order_by(month)
+    )
+    # At most twelve aggregate rows leave the database.
+    return {row.mes: row.valor_importado for row in session.execute(statement)}

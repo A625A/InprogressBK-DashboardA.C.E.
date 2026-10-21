@@ -100,3 +100,22 @@ def test_top_returns_fewer_than_five_and_keeps_null_labels_separate(client, app,
         {"id": 2, "fraccion": None, "descripcion": None, "valor_importado": 0.0},
         {"id": 1, "fraccion": None, "descripcion": None, "valor_importado": -10.0},
     ]
+
+
+def test_country_and_product_rankings_handle_missing_dimensions_independently(
+    client, app, auth_headers, dimensions
+):
+    with app.state.engine.begin() as conn:
+        conn.execute(text("INSERT INTO polizas (id, correlativo) VALUES (1, 1)"))
+        conn.execute(
+            text("""INSERT INTO poliza_items (poliza_id, pais_id, sac_id, valor_cif_uds) VALUES
+            (1, 1, NULL, 111), (1, NULL, 1, 222)""")
+        )
+    result = client.get("/dashboard/kpis/top-5", headers=auth_headers)
+    assert result.status_code == 200
+    assert result.json() == {
+        "paises": [{"id": 1, "name": "Uno", "valor_importado": 111.0}],
+        "productos": [{"id": 1, "fraccion": 101, "descripcion": "A", "valor_importado": 222.0}],
+    }
+    totals = client.get("/dashboard/kpis/totals", headers=auth_headers).json()
+    assert totals == {"total_polizas": 1, "valor_importado_total": 333.0}
