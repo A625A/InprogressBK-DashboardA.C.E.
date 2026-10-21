@@ -4,8 +4,31 @@ version = "1.0.0"
 description = "Prueba técnica para el puesto de Backend Officer"
 requires-python = ">=3.13"
 dependencies = [
+    "argon2-cffi>=25.1,<26",
+    "fastapi>=0.115,<1",
+    "pydantic-settings>=2.7,<3",
+    "pyjwt>=2.10,<3",
+    "sqlalchemy>=2.0,<2.1",
+    "uvicorn>=0.34,<1",
+]
+
+[dependency-groups]
+setup = [
     "notebook>=7.4.7",
     "numpy>=2.3.5",
     "pandas>=2.3.3",
     "tqdm>=4.67.1",
 ]
+dev = [
+    "httpx>=0.28,<1",
+    "pytest>=8,<10",
+    "ruff>=0.14,<1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
