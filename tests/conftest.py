@@ -83,3 +83,20 @@ def policy_payload(dimensions):
             },
         ],
     }
+
+
+@pytest.fixture
+def kpi_data(app, dimensions):
+    from sqlalchemy import text
+
+    with app.state.engine.begin() as conn:
+        conn.execute(
+            text("""INSERT INTO polizas (id, correlativo, fecha_declaracion) VALUES
+            (1, 101, '2025-01-01'), (2, 102, '2025-02-28'), (3, 103, '2024-12-31'),
+            (4, 104, NULL), (5, 105, '2025-03-01')""")
+        )
+        conn.execute(
+            text("""INSERT INTO poliza_items (poliza_id, pais_id, sac_id, valor_cif_uds) VALUES
+            (1, 1, 1, 100), (1, 1, 1, 100), (1, 2, 2, NULL), (2, 2, 2, 50.5),
+            (3, 1, 2, 20), (4, NULL, NULL, 7), (NULL, 1, 1, 9999)""")
+        )

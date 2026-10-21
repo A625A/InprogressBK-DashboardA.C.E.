@@ -1,6 +1,6 @@
 # InprogressBK-DashboardA.C.E.
 
-API de comercio exterior, Fase 1. Python 3.13+, FastAPI y SQLAlchemy con
+API de comercio exterior. Python 3.13+, FastAPI y SQLAlchemy con
 SQLite; separación simple en routers, services, repositories, models,
 schemas, core y db. Las reglas y transacciones viven en services.
 
@@ -35,5 +35,19 @@ uv run --locked pytest
 uv run --locked ruff check app tests
 ```
 
-Alcance pendiente: KPIs, caché, Docker, logs estructurados y despliegue.
+Alcance pendiente: KPIs top-5 y valor-por-mes, caché, Docker, logs estructurados y despliegue.
 Consultar docs/superpowers/specs/2026-10-21-phase-1.md para hallazgos del setup.
+
+
+## KPIs
+
+Todos requieren `Authorization: Bearer <token>` y agregan en SQL sobre
+`valor_cif_uds`, sin conversión de moneda ni redondeo adicional. Los importes
+conservan el tipo FLOAT del esquema original. No hay caché.
+
+`GET /dashboard/kpis/totals` devuelve `total_polizas` y `valor_importado_total`.
+Cuenta todas las cabeceras una sola vez, incluidas las que no tienen ítems.
+Suma únicamente los ítems vinculados a una póliza; los ítems con `poliza_id`
+nulo no representan una declaración y quedan excluidos de todos los KPIs.
+SUM ignora valores nulos; una suma vacía o completamente nula devuelve cero.
+Los valores negativos existentes se conservan, sin inventar reglas de negocio.
