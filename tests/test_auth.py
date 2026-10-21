@@ -83,3 +83,16 @@ def test_protected_route_requires_existing_authenticated_user(client, app):
     with app.state.engine.begin() as conn:
         conn.execute(text("DELETE FROM users"))
     assert client.get("/protected-test", headers=headers).status_code == 401
+
+
+def test_deleted_user_token_cannot_authenticate_replacement_account(client, app):
+    assert client.post("/register", json=CREDS).status_code == 201
+    old_token = client.post("/login", json=CREDS).json()["access_token"]
+    with app.state.engine.begin() as conn:
+        conn.execute(text("DELETE FROM users"))
+    replacement = client.post("/register", json=dict(CREDS, username="replacement"))
+    assert replacement.status_code == 201
+    assert (
+        client.get("/protected-test", headers={"Authorization": f"Bearer {old_token}"}).status_code
+        == 401
+    )

@@ -36,3 +36,10 @@ def test_app_does_not_create_database_on_startup(tmp_path):
     with TestClient(create_app(settings)) as client:
         assert client.get("/docs").status_code == 404
     assert not db_path.exists()
+
+
+def test_example_secret_is_not_accepted_as_real_configuration():
+    from app.core.config import Settings
+
+    with pytest.raises(ValidationError):
+        Settings(jwt_secret="replace-with-a-random-secret-at-least-32-characters")
