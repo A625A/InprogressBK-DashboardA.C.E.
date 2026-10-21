@@ -35,7 +35,7 @@ uv run --locked pytest
 uv run --locked ruff check app tests
 ```
 
-Alcance pendiente: caché, Docker, logs estructurados y despliegue.
+Alcance pendiente: Docker, logs estructurados y despliegue.
 Consultar docs/superpowers/specs/2026-10-21-phase-1.md para hallazgos del setup.
 
 
@@ -43,7 +43,7 @@ Consultar docs/superpowers/specs/2026-10-21-phase-1.md para hallazgos del setup.
 
 Todos requieren `Authorization: Bearer <token>` y agregan en SQL sobre
 `valor_cif_uds`, sin conversión de moneda ni redondeo adicional. Los importes
-conservan el tipo FLOAT del esquema original. No hay caché.
+conservan el tipo FLOAT del esquema original.
 
 `GET /dashboard/kpis/totals` devuelve `total_polizas` y `valor_importado_total`.
 Cuenta todas las cabeceras una sola vez, incluidas las que no tienen ítems.
@@ -78,3 +78,23 @@ Las pruebas de KPIs cubren autenticación, múltiples ítems por póliza,
 SUM sin DISTINCT, nulos, datos vacíos, empates, límites del año y agrupación
 SQL. Las pruebas unitarias de la serie mensual verifican orden y relleno de
 meses; las de integración ejecutan los endpoints contra SQLite temporal.
+
+## Caché de KPIs
+
+Caché en memoria por aplicación/proceso, con TTL absoluto configurable mediante
+`DASHBOARD_CACHE_TTL_SECONDS` (60 segundos por defecto; número positivo y finito).
+Las claves separan cada endpoint y sus parámetros validados, incluido `year`.
+Se guardan únicamente los DTO de agregados correctos: no solicitudes, JWT,
+usuarios, contraseñas, detalles de pólizas ni errores. JWT se valida en cada
+petición, incluidos los aciertos de caché. Máximo 256 entradas; se eliminan las
+expiradas al consultar y la más antigua al alcanzar el límite.
+
+Después del COMMIT exitoso de `POST /polizas` se invalidan totales, rankings y
+la serie mensual del año de la nueva póliza. Una fecha nula no afecta series
+mensuales. ROLLBACK y errores de validación no invalidan. Una lectura iniciada
+antes de la invalidación puede terminar, pero no volver a guardar su resultado
+obsoleto en caché. Las pruebas usan reloj simulado y SQLite temporal, sin sleeps.
+
+No requiere servicios adicionales. Cada proceso tiene su propia caché: escrituras
+externas u otros workers se reflejan al expirar el TTL de ese proceso. Para
+invalidación inmediata por esta API, ejecutar una única instancia/worker.

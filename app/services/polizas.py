@@ -2,13 +2,14 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.cache import DashboardCache
 from app.models.dimensions import Aduana, Pais, Sac, TipoRegimen, TipoUnidadMedida
 from app.repositories import polizas
 from app.repositories.dimensions import missing_ids
 from app.schemas.polizas import PolizaCreate, PolizaDetail, PolizaFilters, PolizaPage
 
 
-def create(session: Session, payload: PolizaCreate) -> PolizaDetail:
+def create(session: Session, payload: PolizaCreate, cache: DashboardCache) -> PolizaDetail:
     try:
         with session.begin():
             if polizas.correlativo_exists(session, payload.correlativo):
@@ -24,10 +25,12 @@ def create(session: Session, payload: PolizaCreate) -> PolizaDetail:
                 if missing_ids(session, model, identifiers - {None}):
                     raise HTTPException(422, f"Referencia inexistente en {model.__tablename__}")
             result = PolizaDetail.model_validate(polizas.add(session, payload))
-        return result
     except IntegrityError:
         # Includes uniqueness/FK races; the transaction context already rolled back.
         raise HTTPException(409, "Conflicto de integridad al guardar la póliza") from None
+    # Exiting session.begin() successfully means COMMIT has completed.
+    cache.invalidate_policy(payload.fecha_declaracion.year if payload.fecha_declaracion else None)
+    return result
 
 
 def detail(session: Session, poliza_id: int) -> PolizaDetail:

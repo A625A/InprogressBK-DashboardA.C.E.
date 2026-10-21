@@ -7,6 +7,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./comercio_exterior.db"
     jwt_secret: SecretStr = Field(min_length=32)
+    dashboard_cache_ttl_seconds: float = Field(default=60, gt=0, allow_inf_nan=False)
     access_token_expire_minutes: int = Field(default=30, gt=0)
 
     @field_validator("jwt_secret")
