@@ -8,3 +8,8 @@ from app.models.dimensions import NamedDimension
 
 def list_dimension(session: Session, model: type[NamedDimension]) -> Sequence[NamedDimension]:
     return session.scalars(select(model).order_by(model.id)).all()
+
+
+def missing_ids(session: Session, model, identifiers: set[int]) -> set[int]:
+    existing = set(session.scalars(select(model.id).where(model.id.in_(identifiers))))
+    return identifiers - existing

@@ -9,6 +9,7 @@ from app.core.config import Settings
 from app.db.session import build_engine
 from app.routers.auth import router as auth_router
 from app.routers.dimensions import router as dimensions_router
+from app.routers.polizas import router as polizas_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -41,5 +42,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return JSONResponse(status_code=422, content={"detail": details})
 
     app.include_router(auth_router)
+    app.include_router(polizas_router)
     app.include_router(dimensions_router)
     return app
