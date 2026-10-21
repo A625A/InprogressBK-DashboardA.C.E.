@@ -1,0 +1,20 @@
+# Allow only application source and locked dependency metadata into the build.
+**
+!app/
+!app/**
+!pyproject.toml
+!uv.lock
+# Exclude local artifacts even if they are placed under app/.
+**/__pycache__/
+**/*.py[cod]
+**/.env
+**/.env.*
+**/*.db
+**/*.db-*
+**/*.db.*
+**/*.bak
+**/*.sqlite*
+**/*.csv*
+**/*.pem
+**/*.key
+**/*.log

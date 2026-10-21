@@ -1,11 +1,31 @@
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
 .env
+.env.*
+!.env.example
 .pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 .DS_Store
 .idea/
-comercio_exterior.db
-polizas_full.csv
-schema.png
-Prueba Técnica - Backend Software Engineer (Officer).pdf
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.csv
+*.csv.zip
+
+# Persistent Docker data, backups and local credentials.
+/data/
+/backups/
+*.bak
+*.db.*
+*.sqlite.*
+*.sqlite3.*
+*.pem
+*.key
+*.log
