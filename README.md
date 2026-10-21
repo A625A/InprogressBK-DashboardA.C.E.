@@ -13,6 +13,14 @@ reglas y transacciones, `repositories` consulta SQL y `models` mapea tablas.
 JWT/Argon2id, caché y observabilidad. Las pólizas y sus ítems se guardan en una
 transacción. SQLite persiste en disco; la caché de KPIs reside solo en memoria.
 
+Se eligió FastAPI por su validación de contratos con Pydantic y su integración
+con autenticación y pruebas HTTP. SQLAlchemy permite expresar consultas
+agregadas y controlar las transacciones sin cargar los ítems en memoria.
+SQLite mantiene compatibilidad con la base entregada y evita servicios
+adicionales. La separación por capas permite probar reglas y consultas por
+separado sin añadir la complejidad de microservicios. La caché con TTL en
+memoria es suficiente para la ejecución documentada con un único worker.
+
 ## Preparación
 
 Requisitos locales: Python 3.13 o superior y uv. Docker usa Python 3.13,
@@ -160,7 +168,14 @@ transacciones, filtros, KPIs, caché y logs. Para una comprobación acotada:
 uv run --locked pytest tests/test_foundation.py tests/test_auth.py
 ```
 
-En esta fase de Docker no se agregaron tests ni se ejecutó pytest completo.
+Revisión final contra el PDF original (21/10/2026): **118 pruebas aprobadas
+en 11,53 s**, en una única ejecución completa con
+`.venv/bin/python -m pytest -p no:cacheprovider`. No se encontraron fallos
+funcionales ni se añadieron pruebas. También pasaron
+`ruff check --no-cache app tests`, `uv lock --check --offline` y
+`docker-compose config --quiet`. El build, arranque y persistencia en Docker
+siguen pendientes por falta de un daemon accesible.
+
 La imagen de ejecución no incluye pytest; ejecutar las pruebas en el entorno
 local con el grupo `dev` que instala `uv sync --locked`.
 Consultar docs/superpowers/specs/2026-10-21-phase-1.md para hallazgos del setup.
