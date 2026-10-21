@@ -10,24 +10,24 @@ Correlativo = Annotated[int, Field(ge=-(2**63), le=2**63 - 1)]
 class ItemCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    sac_id: Identifier
-    pais_id: Identifier
-    tipo_unidad_medida_id: Identifier
-    cantidad_fraccion: FiniteFloat
-    tasa_dai: FiniteFloat
-    valor_dai: FiniteFloat
-    valor_cif_uds: FiniteFloat
-    tasa_cif_cantidad_fraccion: FiniteFloat
+    sac_id: Identifier | None = None
+    pais_id: Identifier | None = None
+    tipo_unidad_medida_id: Identifier | None = None
+    cantidad_fraccion: FiniteFloat | None = None
+    tasa_dai: FiniteFloat | None = None
+    valor_dai: FiniteFloat | None = None
+    valor_cif_uds: FiniteFloat | None = None
+    tasa_cif_cantidad_fraccion: FiniteFloat | None = None
 
 
 class PolizaCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     correlativo: Correlativo
-    fecha_declaracion: date
-    tipo_cambio_dolar: FiniteFloat
-    aduana_id: Identifier
-    tipo_regimen_id: Identifier
+    fecha_declaracion: date | None = None
+    tipo_cambio_dolar: FiniteFloat | None = None
+    aduana_id: Identifier | None = None
+    tipo_regimen_id: Identifier | None = None
     items: list[ItemCreate] = Field(min_length=1)
 
 

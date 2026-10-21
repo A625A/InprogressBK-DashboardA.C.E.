@@ -21,7 +21,7 @@ def create(session: Session, payload: PolizaCreate) -> PolizaDetail:
                 (TipoUnidadMedida, {item.tipo_unidad_medida_id for item in payload.items}),
             ]
             for model, identifiers in references:
-                if missing_ids(session, model, identifiers):
+                if missing_ids(session, model, identifiers - {None}):
                     raise HTTPException(422, f"Referencia inexistente en {model.__tablename__}")
             result = PolizaDetail.model_validate(polizas.add(session, payload))
         return result

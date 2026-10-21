@@ -11,5 +11,7 @@ def list_dimension(session: Session, model: type[NamedDimension]) -> Sequence[Na
 
 
 def missing_ids(session: Session, model, identifiers: set[int]) -> set[int]:
+    if not identifiers:
+        return set()
     existing = set(session.scalars(select(model.id).where(model.id.in_(identifiers))))
     return identifiers - existing

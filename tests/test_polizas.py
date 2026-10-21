@@ -65,7 +65,7 @@ def test_invalid_payload_is_rejected(client, app, auth_headers, policy_payload, 
     elif mutation == "extra":
         policy_payload["unexpected"] = "value"
     elif mutation == "missing":
-        del policy_payload["items"][0]["sac_id"]
+        del policy_payload["correlativo"]
     else:
         policy_payload["aduana_id"] = 0
     assert client.post("/polizas", json=policy_payload, headers=auth_headers).status_code == 422
@@ -102,3 +102,18 @@ def test_reads_nullable_legacy_fields(client, app, auth_headers, policy_payload)
     body = client.get("/polizas/1", headers=auth_headers).json()
     assert body["aduana_id"] is None
     assert body["items"][0]["tasa_cif_cantidad_fraccion"] is None
+
+
+def test_creation_respects_nullable_fields_in_supplied_schema(client, app, auth_headers):
+    response = client.post(
+        "/polizas",
+        headers=auth_headers,
+        json={
+            "correlativo": 777,
+            "items": [{"valor_cif_uds": 100, "pais_id": None}],
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["aduana_id"] is None
+    assert response.json()["items"][0]["pais_id"] is None
+    assert counts(app) == (1, 1)
