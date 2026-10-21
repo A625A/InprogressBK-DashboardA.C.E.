@@ -11,7 +11,7 @@ uv sync --locked
 export JWT_SECRET="$(openssl rand -hex 32)"
 export DATABASE_URL='sqlite:///./comercio_exterior.db'
 uv run --locked python -m app.db.init
-uv run --locked uvicorn app.main:create_app --factory --reload
+uv run --locked uvicorn app.main:create_app --factory --reload --no-access-log
 ```
 
 Ejecutar desde la raíz del checkout de desarrollo. El comando db.init crea
@@ -35,7 +35,7 @@ uv run --locked pytest
 uv run --locked ruff check app tests
 ```
 
-Alcance pendiente: Docker, logs estructurados y despliegue.
+Alcance pendiente: Docker y despliegue.
 Consultar docs/superpowers/specs/2026-10-21-phase-1.md para hallazgos del setup.
 
 
@@ -98,3 +98,23 @@ obsoleto en caché. Las pruebas usan reloj simulado y SQLite temporal, sin sleep
 No requiere servicios adicionales. Cada proceso tiene su propia caché: escrituras
 externas u otros workers se reflejan al expirar el TTL de ese proceso. Para
 invalidación inmediata por esta API, ejecutar una única instancia/worker.
+
+## Observabilidad y errores
+
+Cada solicitud genera un log JSON en stderr con timestamp UTC, nivel, request_id,
+method, path y status_code. Respuestas menores a 400 usan INFO, 4xx WARNING y
+5xx ERROR. El servidor genera un UUID por solicitud, disponible en
+`request.state.request_id` y en el encabezado `X-Request-ID` de la respuesta.
+
+Se registra la plantilla de ruta (por ejemplo `/polizas/{poliza_id}`) o
+`<unmatched>` para rutas desconocidas. Se omiten cuerpos, cabeceras, parámetros,
+credenciales y detalles de excepciones. El access log estándar de Uvicorn se
+desactiva para evitar que registre URLs con secretos.
+
+Los fallos inesperados devuelven 500 con `Error interno del servidor`; los errores
+HTTP explícitos conservan sus códigos y encabezados, con mensaje genérico para
+5xx. La validación conserva 422 y devuelve `Solicitud inválida`, sin repetir
+valores ni nombres de campos enviados por el cliente. Los demás mensajes HTTP
+existentes se conservan. Ninguna respuesta de error incluye tracebacks.
+
+Verificación específica: `uv run --locked pytest tests/test_observability.py tests/test_auth.py tests/test_polizas.py tests/test_queries.py`.
