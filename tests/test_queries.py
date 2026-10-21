@@ -109,3 +109,41 @@ def test_empty_database_has_empty_page(client, auth_headers):
         "page": 1,
         "page_size": 20,
     }
+
+
+def test_item_filter_does_not_rescan_matching_items_for_every_policy(
+    client, app, auth_headers, policies
+):
+    # Bound SQLite work, rather than relying on flaky elapsed-time assertions.
+    # Every item matches pais_id, but none matches sac_id: a correlated scan
+    # would exhaust the instruction budget on the provided single-column indexes.
+    with app.state.engine.begin() as conn:
+        conn.execute(text("DELETE FROM poliza_items"))
+        conn.execute(
+            text("""WITH RECURSIVE n(x) AS (
+            SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<5000)
+            INSERT INTO poliza_items(poliza_id,pais_id,sac_id)
+            SELECT 1,1,1 FROM n""")
+        )
+    callbacks = 0
+
+    def check_budget():
+        nonlocal callbacks
+        callbacks += 1
+        return int(callbacks > 200)
+
+    def install_budget(connection, *_args):
+        connection.set_progress_handler(check_budget, 1000)
+
+    def clear_budget(connection, *_args):
+        connection.set_progress_handler(None, 0)
+
+    event.listen(app.state.engine, "checkout", install_budget)
+    event.listen(app.state.engine, "checkin", clear_budget)
+    try:
+        result = client.get("/polizas?pais_id=1&sac_id=2", headers=auth_headers)
+        assert result.status_code == 200
+        assert result.json()["total"] == 0
+    finally:
+        event.remove(app.state.engine, "checkout", install_budget)
+        event.remove(app.state.engine, "checkin", clear_budget)

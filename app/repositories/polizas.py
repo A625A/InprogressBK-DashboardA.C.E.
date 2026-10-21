@@ -41,11 +41,7 @@ def list_page(session: Session, filters: PolizaFilters):
         if value is not None:
             item_conditions.append(getattr(PolizaItem, name) == value)
     if item_conditions:
-        conditions.append(
-            select(PolizaItem.id)
-            .where(PolizaItem.poliza_id == Poliza.id, *item_conditions)
-            .exists()
-        )
+        conditions.append(Poliza.id.in_(select(PolizaItem.poliza_id).where(*item_conditions)))
     total = session.scalar(select(func.count()).select_from(Poliza).where(*conditions))
     rows = session.scalars(
         select(Poliza)
