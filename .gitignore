@@ -18,3 +18,14 @@ htmlcov/
 *.sqlite3-*
 *.csv
 *.csv.zip
+
+# Persistent Docker data, backups and local credentials.
+/data/
+/backups/
+*.bak
+*.db.*
+*.sqlite.*
+*.sqlite3.*
+*.pem
+*.key
+*.log

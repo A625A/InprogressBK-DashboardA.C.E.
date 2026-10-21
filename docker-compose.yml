@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+    user: "${APP_UID:-10001}:${APP_GID:-10001}"
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    environment:
+      JWT_SECRET: "${JWT_SECRET:?Define un JWT_SECRET aleatorio de al menos 32 caracteres}"
+      DATABASE_URL: "${DATABASE_URL:-sqlite:////data/comercio_exterior.db}"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "${ACCESS_TOKEN_EXPIRE_MINUTES:-30}"
+      DASHBOARD_CACHE_TTL_SECONDS: "${DASHBOARD_CACHE_TTL_SECONDS:-60}"
+    volumes:
+      - type: bind
+        source: "${SQLITE_DATA_DIR:-./data}"
+        target: /data
+        bind:
+          create_host_path: false
+    init: true
