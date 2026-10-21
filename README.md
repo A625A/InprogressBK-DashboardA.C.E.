@@ -35,7 +35,7 @@ uv run --locked pytest
 uv run --locked ruff check app tests
 ```
 
-Alcance pendiente: KPIs top-5 y valor-por-mes, caché, Docker, logs estructurados y despliegue.
+Alcance pendiente: KPI valor-por-mes, caché, Docker, logs estructurados y despliegue.
 Consultar docs/superpowers/specs/2026-10-21-phase-1.md para hallazgos del setup.
 
 
@@ -51,3 +51,11 @@ Suma únicamente los ítems vinculados a una póliza; los ítems con `poliza_id`
 nulo no representan una declaración y quedan excluidos de todos los KPIs.
 SUM ignora valores nulos; una suma vacía o completamente nula devuelve cero.
 Los valores negativos existentes se conservan, sin inventar reglas de negocio.
+
+`GET /dashboard/kpis/top-5` devuelve `paises` y `productos`: hasta cinco
+filas por ranking, con `id`, metadatos de la dimensión y `valor_importado`.
+Ordena por suma descendente y desempata por ID ascendente. Agrupa por ID,
+no solo por nombre o descripción. Excluye referencias de dimensión nulas;
+los nombres/descripciones nulos de dimensiones existentes se conservan.
+Solo aparecen dimensiones con ítems vinculados a pólizas. Por tanto, un
+ranking puede contener menos de cinco filas y no tiene por qué sumar el total.
